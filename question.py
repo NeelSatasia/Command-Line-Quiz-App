@@ -1,7 +1,5 @@
 class Question:
-	options = []
-	correct_answers = []
-
-	def __init__(self, question_type, question):
+	def __init__(self, question_type, question, options):
 		self.question_type = question_type
 		self.question = question
+		self.options = options
