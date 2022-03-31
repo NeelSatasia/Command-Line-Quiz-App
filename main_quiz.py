@@ -21,8 +21,8 @@ print('\n')
 create_quiz = 'create quiz'
 del_quiz = 'del quiz'
 finish_quiz = 'finish quiz'
-add_mcquest = 'mc'
-add_frquest = 'fr'
+mc = 'mc'
+fr = 'fr'
 add_opt_mc = 'add opt'
 remove_opt_mc = 'rem opt'
 del_quest = 'del que'
@@ -58,16 +58,21 @@ while True:
 			print('\t\t\t(You must first finish creating the new quiz or delete it)\n')
 
 		elif inputCommand == finish_quiz:
-			creating_quiz = False
-			print("\t\t\t('" + quizzes[-1][0] + "' saved)\n")
+			if len(quizzes[-1]) > 1:
+				creating_quiz = False
+				print("\t\t\t('" + quizzes[-1][0] + "' saved)\n")
+
+			else:
+				print('\t\t\t(A quiz must have 1 or more questions!)\n')
 
 		elif inputCommand == del_quiz:
+			quiz_name = quizzes[-1][0]
 			quizzes.pop()
 			creating_quiz = False
 
 			print("\t\t\t('" + quiz_name + "' deleted)\n")
 		
-		elif inputCommand == add_mcquest or inputCommand == add_frquest:
+		elif inputCommand == mc or inputCommand == fr:
 			question = input('\t\t\tQuestion ' + str(len(quizzes[-1])) + " (can use 'del que'): ")
 			print()
 
@@ -77,16 +82,20 @@ while True:
 			else:
 				#Input: mc
 
-				if inputCommand == add_mcquest:
+				if inputCommand == mc:
 					options = []
 					correct_answers = 0
 					total_options = 1
 
 					while True:
-						option = input('\t\t\t\tOption ' + str(total_options) + ': ')
+						option_input = input('\t\t\t\tOption ' + str(total_options) + ': ')
 						print()
 
-						if option == 'que done':
+						if option_input == del_quest:
+							print('\t\t\t\t\t(Question cancelled)\n')
+							break
+
+						elif option_input == 'que done':
 							if len(options) >= 2 and correct_answers > 0:
 								quizzes[-1].append(Question(inputCommand, question, options))
 								break
@@ -94,20 +103,30 @@ while True:
 								print('\t\t\t\t\t(Must have more than 1 option!)')
 								print('\t\t\t\t\t(Must choose one or more correct answers!)\n')
 
-						elif option == del_quest:
+						elif option_input == del_quest:
 							print('\t\t\t\t(Question cancelled)\n')
 							break
 
 						else:
-							if option.find('->') == 0:
-								correct_answers += 1
+							same_option = False
 
-							options.append(option)
-							total_options += 1
+							for option in options:
+								if (option.find('->') == 0 and (option_input.find('->') != 0 and option[2:] == option_input)) or (option.find('->') != 0 and (option_input.find('->') == 0 and option == option_input[2:])) or (option.find('->') != 0 and (option_input.find('->') != 0 and option == option_input)):
+									same_option = True
+
+							if same_option == False:
+								if option_input.find('->') == 0:
+									correct_answers += 1
+
+								options.append(option_input)
+								total_options += 1
+
+							else:
+								print('\t\t\t\t\t(The option already exists!)\n')
 				
 				#Input: fr
 
-				elif inputCommand == add_frquest:
+				elif inputCommand == fr:
 					correct_answer = input("\t\t\t\tEnter correct answer (can use 'del que'): ")
 					print()
 
@@ -135,16 +154,42 @@ while True:
 							quizzes[-1].pop(quest_num)
 							print('\t\t\t(Question ' + which_question_input + ' deleted)\n')
 						else:
-							print('\t\t\t(Question # out of range!)')
+							print('\t\t\t\t(Question # out of range!)\n')
 
 					except:
-						print("\t\t\t(Invalid input or question # out of range!)\n")
+						print("\t\t\t\t(Invalid Input!)\n")
 
 			else:
 				print('\t\t\t(Quiz is empty!)\n')
 
+		elif inputCommand == view_quiz:
+			if len(quizzes[-1]) > 1:
+
+				print('\t\t\t----------------------------------\n')
+
+				for i in range(1, len(quizzes[-1])):
+
+					print('\t\t\tQuestion ' + str(i) + ': ' + quizzes[-1][i].question + '\n')
+
+					if quizzes[-1][i].question_type == 'mc':
+						for j in range(len(quizzes[-1][i].options)):
+
+							if quizzes[-1][i].options[j].find('->') == 0:
+								print('\t\t\t\t-> Option ' + str(j + 1) + ': ' + quizzes[-1][i].options[j][2:] + '\n')
+
+							else:
+								print('\t\t\t\t   Option ' + str(j + 1) + ': ' + quizzes[-1][i].options[j] + '\n')
+
+					else:
+						print('\t\t\t\tCorrect Answer: ' + quizzes[-1][i].options + '\n')
+
+				print('\t\t\t----------------------------------\n')
+
+			else:
+				print('\n\t\t\t(Quiz is empty!)\n')
+
 		else:
-			print("\t\t\t(Invalid Input!)\n")
+			print("\t\t\t(Invalid input for creating a quiz!)\n")
 		
 
 	#Create a quiz
@@ -165,8 +210,12 @@ while True:
 			quiz_name_input = input('\tEnter Quiz Name: ')
 			print()
 
+			quiz_exist = False
+
 			for quiz in quizzes:
 				if quiz[0] == quiz_name_input:
+					quiz_exist = True
+
 					which_question_input = input("\t\tQuestion # (or the command 'last'): ")
 					print()
 
@@ -226,48 +275,147 @@ while True:
 								print("\t\t\t(Invalid input or question # out of range!)\n")
 					break
 
+			if quiz_exist == False:
+				print("\t\t('" + quiz_name_input + "' doesn't exist!)\n")
+
 		else:
 			print("\t(No quizzes exist!)\n")
 
 	#View a quiz
 
 	elif inputCommand == view_quiz:
-		quiz_name_input = input("\tEnter Quiz Name: ")
-		print()
+		if len(quizzes) > 0:
 
-		with_answers_input = input('\t\tWith answers? (yes or no): ')
+			quiz_name_input = input("\tEnter Quiz Name: ")
+			print()
 
-		while True:
-			if with_answers_input != 'yes' and with_answers_input == 'no':
-				print('\t\t\t(Invalid Input!)\n')
-			else:
-				break
+			quiz_to_view = None
 
-		print()
+			for quiz in quizzes:
+				if quiz[0] == quiz_name_input:
+					quiz_to_view = quiz
+					break
 
-		for quiz in quizzes:
-			if quiz[0] == quiz_name_input:
-				for i in range(1, len(quiz)):
-					print('\t\t\tQuestion ' + str(i) + ': ' + quiz[i].question + '\n')
+			if quiz_to_view != None:
 
-					if quiz[i].question_type == 'mc':
+				with_answers_input = input('\t\tShow answers? (yes or no): ')
 
-						for option_num in range(len(quiz[i].options)):
+				while True:
+					if with_answers_input != 'yes' and with_answers_input != 'no':
+						print('\t\t\t(Invalid Input!)\n')
+					else:
+						break
 
-							if quiz[i].options[option_num].find('->') == 0:
+				print()
+
+				
+				for i in range(1, len(quiz_to_view)):
+					print('\t\t\tQuestion ' + str(i) + ': ' + quiz_to_view[i].question + '\n')
+
+					if quiz_to_view[i].question_type == 'mc':
+
+						for option_num in range(len(quiz_to_view[i].options)):
+
+							if quiz_to_view[i].options[option_num].find('->') == 0:
 								if with_answers_input == 'yes':
-									print('\t\t\t\t-> Option ' + str((option_num + 1)) + ': ' + quiz[i].options[option_num][2:] + '\n')
+									print('\t\t\t\t-> Option ' + str((option_num + 1)) + ': ' + quiz_to_view[i].options[option_num][2:] + '\n')
 
 								else:
-									print('\t\t\t\tOption ' + str((option_num + 1)) + ': ' + quiz[i].options[option_num][2:] + '\n')
+									print('\t\t\t\tOption ' + str((option_num + 1)) + ': ' + quiz_to_view[i].options[option_num][2:] + '\n')
 
 							else:
-								print('\t\t\t\tOption ' + str((option_num + 1)) + ': ' + quiz[i].options[option_num] + '\n')
+								if with_answers_input == 'yes':
+									print('\t\t\t\t   Option ' + str((option_num + 1)) + ': ' + quiz_to_view[i].options[option_num] + '\n')
+
+								else:
+									print('\t\t\t\tOption ' + str((option_num + 1)) + ': ' + quiz_to_view[i].options[option_num] + '\n')
 
 					else:
 						if with_answers_input == 'yes':
-							print('\t\t\t\tCorrect Answer: ' + quiz[i].options + '\n')
+							print('\t\t\t\tCorrect Answer: ' + quiz_to_view[i].options + '\n')
 
+			else:
+				print("\t\t('" + quiz_name_input + "' doesn't exist!)\n")
+
+		else:
+			print('\t(No quizzes exist!)\n')
+
+	#Delete a quiz
+
+	elif inputCommand == del_quiz:
+
+		if len(quizzes) > 0:
+
+			quiz_name_input = input('\tEnter Quiz Name: ')
+			print()
+
+			quiz_exist = False
+
+			for quiz in quizzes:
+				if quiz[0] == quiz_name_input:
+					quizzes.remove(quiz)
+					print("\t\t('" + quiz_name_input + "' deleted)\n")
+					quiz_exist = True
+					break
+
+			if quiz_exist == False:
+				print("\t\t('" + quiz_name_input + "' doesn't exist!)\n")
+
+		else:
+			print('\t(No quizzes exist!)\n')
+
+	#Take a quiz
+
+	elif inputCommand == take_quiz:
+
+		if len(quizzes) > 0:
+
+			quiz_name_input = input('\tEnter Quiz Name: ')
+			print('\n')
+
+			quiz_exist = False
+
+			for quiz in quizzes:
+				if quiz[0] == quiz_name_input:
+					quiz_exist = True
+					quest_num = 1
+
+					while True:
+						print('\t\tQuestion ' + str(quest_num) + ': ' + quiz[quest_num].question + '\n')
+
+						if quiz[quest_num].question_type == 'mc':
+
+							option_count = 1
+
+							for option in quiz[quest_num].options:
+								if option.find('->') == 0:
+									print('\t\t\tOption ' + str(option_count) + ': ' + option[2:] + '\n')
+
+								else:
+									print('\t\t\tOption ' + str(option_count) + ': ' + option + '\n')
+
+								option_count += 1
+
+							print()
+
+
+						answer_input = input('\t\t\tEnter Answer: ')
+						print('\n')
+
+						if quest_num + 1 <= len(quiz) - 1:
+							quest_num += 1
+
+						else:
+							print('\t\t(Quiz completed)')
+							break
+
+					break
+
+			if quiz_exist == False:
+				print("\t\t('" + quiz_name_input + "' doesn't exist!)\n")
+
+		else:
+			print('\t(No quizzes exist!)\n')
 
 
 
