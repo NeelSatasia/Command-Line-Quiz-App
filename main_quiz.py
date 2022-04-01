@@ -73,68 +73,98 @@ while True:
 			print("\t\t\t('" + quiz_name + "' deleted)\n")
 		
 		elif inputCommand == mc or inputCommand == fr:
-			question = input('\t\t\tQuestion ' + str(len(quizzes[-1])) + " (can use 'del que'): ")
-			print()
+			while True:
+				question = input('\t\t\tQuestion ' + str(len(quizzes[-1])) + " (can use 'del que'): ")
+				print()
 
-			if question == del_quest:
-				print('\t\t\t\t(Question cancelled)\n')
+				question_done = False
 
-			else:
-				#Input: mc
+				if question != '':
 
-				if inputCommand == mc:
-					options = []
-					correct_answers = 0
-					total_options = 1
+					question_done = True
 
-					while True:
-						option_input = input('\t\t\t\tOption ' + str(total_options) + ': ')
-						print()
-
-						if option_input == del_quest:
-							print('\t\t\t\t\t(Question cancelled)\n')
-							break
-
-						elif option_input == 'que done':
-							if len(options) >= 2 and correct_answers > 0:
-								quizzes[-1].append(Question(inputCommand, question, options))
-								break
-							else:
-								print('\t\t\t\t\t(Must have more than 1 option!)')
-								print('\t\t\t\t\t(Must choose one or more correct answers!)\n')
-
-						elif option_input == del_quest:
-							print('\t\t\t\t(Question cancelled)\n')
-							break
-
-						else:
-							same_option = False
-
-							for option in options:
-								if (option.find('->') == 0 and (option_input.find('->') != 0 and option[2:] == option_input)) or (option.find('->') != 0 and (option_input.find('->') == 0 and option == option_input[2:])) or (option.find('->') != 0 and (option_input.find('->') != 0 and option == option_input)):
-									same_option = True
-
-							if same_option == False:
-								if option_input.find('->') == 0:
-									correct_answers += 1
-
-								options.append(option_input)
-								total_options += 1
-
-							else:
-								print('\t\t\t\t\t(The option already exists!)\n')
-				
-				#Input: fr
-
-				elif inputCommand == fr:
-					correct_answer = input("\t\t\t\tEnter correct answer (can use 'del que'): ")
-					print()
-
-					if correct_answer == del_quest:
+					if question == del_quest:
 						print('\t\t\t\t(Question cancelled)\n')
+						break
 
 					else:
-						quizzes[-1].append(Question(inputCommand, question, correct_answer))
+						#Input: mc
+
+						if inputCommand == mc:
+							options = []
+							correct_answers = 0
+							total_options = 1
+
+							while True:
+								option_input = input('\t\t\t\tOption ' + str(total_options) + ': ')
+								print()
+
+								if option_input != '':
+									if option_input == del_quest:
+										print('\t\t\t\t\t(Question cancelled)\n')
+										break
+
+									elif option_input == 'que done':
+										if len(options) >= 2 and correct_answers > 0:
+											quizzes[-1].append(Question(inputCommand, question, options))
+											break
+										else:
+											print('\t\t\t\t\t(Must have more than 1 option!)')
+											print('\t\t\t\t\t(Must choose one or more correct answers!)\n')
+
+									elif option_input == del_quest:
+										print('\t\t\t\t(Question cancelled)\n')
+										break
+
+									else:
+										same_option = ''
+
+										for option in options:
+											if option.find('->') == 0 and option_input.find('->') == 0:
+												same_option = '(Correct option is already been selected!)'
+												break
+
+											elif (option.find('->') != 0 and option_input.find('->') != 0 and option == option_input) or (option.find('->') == 0 and option_input.find('->') != 0 and option[2:] == option_input) or (option.find('->') != 0 and option_input.find('->') == 0 and option == option_input[2:]):
+												same_option = '(The option already exists!)'
+												break
+
+										if same_option == '':
+											if option_input.find('->') == 0:
+												correct_answers += 1
+
+											options.append(option_input)
+											total_options += 1
+
+										else:
+											print('\t\t\t\t\t' + same_option + '\n')
+
+								else:
+									print('\t\t\t\t\t(Must write something!)\n')
+						
+						#Input: fr
+
+						elif inputCommand == fr:
+							while True:
+								correct_answer = input("\t\t\t\tEnter correct answer (can use 'del que'): ")
+								print()
+
+								if correct_answer != '':
+									if correct_answer == del_quest:
+										print('\t\t\t\t\t(Question cancelled)\n')
+										break
+
+									else:
+										quizzes[-1].append(Question(inputCommand, question, correct_answer))
+										break
+
+								else:
+									print('\t\t\t\t\t(Must write the correct answer!)\n')
+
+				else:
+					print('\t\t\t\t(Must write something!)\n')
+
+				if question_done == True:
+					break
 
 		elif inputCommand == del_quest:
 
@@ -378,6 +408,7 @@ while True:
 			for quiz in quizzes:
 				if quiz[0] == quiz_name_input:
 					quiz_exist = True
+					quiz_completed = False
 					quest_num = 1
 
 					while True:
@@ -399,14 +430,59 @@ while True:
 							print()
 
 
-						answer_input = input('\t\t\tEnter Answer: ')
-						print('\n')
+						while True:
+							answer_input = input('\t\t\tEnter Answer: ')
+							print()
 
-						if quest_num + 1 <= len(quiz) - 1:
-							quest_num += 1
+							got_answer_right = False
 
-						else:
-							print('\t\t(Quiz completed)')
+							if answer_input != '':
+								if quiz[quest_num].question_type == 'mc':
+
+									try:
+										chosen_option_num = int(answer_input)
+
+										if chosen_option_num >= 1 and chosen_option_num <= len(quiz[quest_num].options):
+											
+											for i in range(len(quiz[quest_num].options)):
+												if i + 1 == chosen_option_num and quiz[quest_num].options[i].find('->') == 0:
+													print('\t\t\t\tCorrect :)\n')
+													got_answer_right = True
+													break
+
+											if got_answer_right == False:
+												print('\t\t\t\tIncorrect :(\n')
+
+										else:
+											print("\t\t\t\t(Option number doesn't exist!)\n")
+
+									except:
+										print('\t\t\t\t(Must write the option number!)\n')
+
+								else:
+
+									if answer_input == quiz[quest_num].options:
+										print('\t\t\t\tCorrect :)\n')
+										got_answer_right = True
+
+									else:
+										print('\t\t\t\tIncorrect :(\n')
+
+							else:
+								print('\t\t\t\t(Must write an answer!)\n')
+
+							if got_answer_right == True:
+
+								if quest_num + 1 <= len(quiz) - 1:
+									quest_num += 1
+
+								else:
+									print('\t\t(Quiz completed)\n')
+									quiz_completed = True
+								
+								break
+
+						if quiz_completed == True:
 							break
 
 					break
