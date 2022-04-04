@@ -1,12 +1,13 @@
 from question import Question
+import os
 
 print('\n\n--- This is a text-based Quiz App where you can create and take the quiz ---\n')
 
 print('Commands: ')
 
 print('\t-Create Quiz:                   /create quiz')
-print('\t-Delete Quiz:                   /del quiz')
-print('\t-Finish Quiz:                   /finish quiz')
+print('\t-Delete Quiz:                   (/del quiz) or (/del all quizzes)')
+print('\t-Save Quiz:                     /save quiz')
 print('\t-Add Question (type):           /mc (multiple choice) or /fr (free response)')
 print('\t-Quit adding options for mc:    /que done')
 print('\t-Correct answer for mc:         (Use -> before the answer (ex: ->answer)')
@@ -15,38 +16,87 @@ print('\t-Edit Question:                 /edit que')
 print('\t-Take Quiz:                     /take quiz')
 print('\t-View Quiz:                     /view quiz')
 print('\t-Edit Quiz:                     /edit quiz')
+print("\t-View All Quizzes' Names:       /view quizzes names")
 print('\t-Terminate Code:                /close')
 
 print('\n')
 
 create_quiz = '/create quiz'
 del_quiz = '/del quiz'
-finish_quiz = '/finish quiz'
+del_all_quizzes = '/del all quizzes'
+save_quiz = '/save quiz'
 mc = 'mc'
 command_mc = '/mc'
 fr = 'fr'
 command_fr = '/fr'
-add_opt_mc = 'add opt'
-remove_opt_mc = 'rem opt'
 quest_done = '/que done'
 del_quest = '/del que'
 take_quiz = '/take quiz'
 view_quiz = '/view quiz'
 edit_quiz = '/edit quiz'
+view_quizzes = '/view quizzes names'
 close = '/close'
 
-create_or_edit_quiz = False
-current_quiz_index = None
+filename = 'quizzes_data.txt'
 
 quizzes = []
 
+#If any, load all the quizzes from the file
+
+if os.path.exists(filename):
+	file = open(filename, 'r')
+
+	for line in file:
+		if line.find('(Quiz: ') == 0:
+			quizzes.append([line[7:len(line) - 2]])
+
+		elif line.find('(Question (mc): ') == 0:
+			quizzes[-1].append(Question(mc, line[16:len(line) - 2], []))
+
+		elif line.find('(Option: ') == 0:
+			quizzes[-1][-1].options.append(line[9:len(line) - 2])
+
+		elif line.find('(Question (fr): ') == 0:
+			quizzes[-1].append(Question(fr, line[16:len(line) - 2], ''))
+
+		elif line.find('(Correct Answer: ') == 0:
+			quizzes[-1][-1].options = line[17:len(line) - 2]
+
+	file.close()
+
+#Adds new or updated quiz data
+
+def quiz_data_in_file(quiz, file):
+
+	for stuff in quiz:
+		if isinstance(stuff, str):
+			file.write('(Quiz: ' + stuff + ')\n')
+
+		elif stuff.question_type == mc:
+			file.write('(Question (mc): ' + stuff.question + ')\n')
+
+			for option in stuff.options:
+				file.write('(Option: ' + option + ')\n')
+
+		elif stuff.question_type == fr:
+			file.write('(Question (fr): ' + stuff.question + ')\n')
+			file.write('(Correct Answer: ' + stuff.options + ')\n')
+
+	file.write('\n')
+
+
+create_or_edit_quiz = False
+edit_quiz_mode = False
+current_quiz_index = None
+
 inputCommand = None
 
-#While the program is running
+#While the program is running, the user can enter any given commands
 
 while True:
+
 	if create_or_edit_quiz == True:
-		inputCommand = input('\t\tEnter Command (for ' + "'" + quizzes[-1][0] + "'): ")
+		inputCommand = input('\t\tEnter Command (for ' + "'" + quizzes[current_quiz_index][0] + "'): ")
 	else:
 		inputCommand = input('Enter Command: ')
 	
@@ -64,11 +114,27 @@ while True:
 		if inputCommand == create_quiz:
 			print('\t\t\t(Must first finish with this quiz!)\n')
 
-		elif inputCommand == finish_quiz:
+		elif inputCommand == save_quiz:
+
 			if len(quizzes[current_quiz_index]) > 1:
+
 				create_or_edit_quiz = False
 				print("\t\t\t('" + quizzes[current_quiz_index][0] + "' saved)\n")
-				current_quiz_index = None
+
+				if edit_quiz_mode == True:
+
+					rewrite_file = open(filename, 'w')
+
+					for quiz in quizzes:
+						quiz_data_in_file(quiz, rewrite_file)
+
+					rewrite_file.close()
+
+					edit_quiz_mode = False
+
+				else:
+					edit_file = open(filename, 'a')
+					quiz_data_in_file(quizzes[current_quiz_index], edit_file)
 
 			else:
 				print('\t\t\t(A quiz must have 1 or more questions!)\n')
@@ -272,52 +338,55 @@ while True:
 			quiz_name_input = input("\tEnter Quiz Name: ")
 			print()
 
-			quiz_to_view = None
+			quiz_exist = False
 
 			for quiz in quizzes:
 				if quiz[0] == quiz_name_input:
-					quiz_to_view = quiz
+					quiz_exist = True
+
+					while True:
+						with_answers_input = input('\t\tShow answers? (yes or no): ')
+						print()
+
+						if with_answers_input != 'yes' and with_answers_input != 'no':
+							print('\t\t\t(Invalid Input!)\n')
+
+						else:
+							break
+
+					print('\n\t\t----------------------------------\n')
+
+					
+					for i in range(1, len(quiz)):
+						print('\t\t\tQuestion ' + str(i) + ': ' + quiz[i].question + '\n')
+
+						if quiz[i].question_type == mc:
+
+							for option_num in range(len(quiz[i].options)):
+
+								if quiz[i].options[option_num].find('->') == 0:
+									if with_answers_input == 'yes':
+										print('\t\t\t\t-> Option ' + str((option_num + 1)) + ': ' + quiz[i].options[option_num][2:] + '\n')
+
+									else:
+										print('\t\t\t\tOption ' + str((option_num + 1)) + ': ' + quiz[i].options[option_num][2:] + '\n')
+
+								else:
+									if with_answers_input == 'yes':
+										print('\t\t\t\t   Option ' + str((option_num + 1)) + ': ' + quiz[i].options[option_num] + '\n')
+
+									else:
+										print('\t\t\t\tOption ' + str((option_num + 1)) + ': ' + quiz[i].options[option_num] + '\n')
+
+						else:
+							if with_answers_input == 'yes':
+								print('\t\t\t\tCorrect Answer: ' + quiz[i].options + '\n')
+
+					print('\t\t----------------------------------\n')
+
 					break
 
-			if quiz_to_view != None:
-
-				with_answers_input = input('\t\tShow answers? (yes or no): ')
-
-				while True:
-					if with_answers_input != 'yes' and with_answers_input != 'no':
-						print('\t\t\t(Invalid Input!)\n')
-					else:
-						break
-
-				print()
-
-				
-				for i in range(1, len(quiz_to_view)):
-					print('\t\t\tQuestion ' + str(i) + ': ' + quiz_to_view[i].question + '\n')
-
-					if quiz_to_view[i].question_type == mc:
-
-						for option_num in range(len(quiz_to_view[i].options)):
-
-							if quiz_to_view[i].options[option_num].find('->') == 0:
-								if with_answers_input == 'yes':
-									print('\t\t\t\t-> Option ' + str((option_num + 1)) + ': ' + quiz_to_view[i].options[option_num][2:] + '\n')
-
-								else:
-									print('\t\t\t\tOption ' + str((option_num + 1)) + ': ' + quiz_to_view[i].options[option_num][2:] + '\n')
-
-							else:
-								if with_answers_input == 'yes':
-									print('\t\t\t\t   Option ' + str((option_num + 1)) + ': ' + quiz_to_view[i].options[option_num] + '\n')
-
-								else:
-									print('\t\t\t\tOption ' + str((option_num + 1)) + ': ' + quiz_to_view[i].options[option_num] + '\n')
-
-					else:
-						if with_answers_input == 'yes':
-							print('\t\t\t\tCorrect Answer: ' + quiz_to_view[i].options + '\n')
-
-			else:
+			if quiz_exist == False:
 				print("\t\t('" + quiz_name_input + "' doesn't exist!)\n")
 
 		else:
@@ -339,10 +408,33 @@ while True:
 					quizzes.remove(quiz)
 					print("\t\t('" + quiz_name_input + "' deleted)\n")
 					quiz_exist = True
+
+					file = open(filename, 'w')
+
+					for quiz in quizzes:
+						quiz_data_in_file(quiz, file)
+
+					file.close()
+
 					break
 
 			if quiz_exist == False:
 				print("\t\t('" + quiz_name_input + "' doesn't exist!)\n")
+
+		else:
+			print('\t(No quizzes exist!)\n')
+
+	#Delete all quizzes
+
+	elif inputCommand == del_all_quizzes:
+
+		if len(quizzes) > 0:
+
+			if os.path.exists(filename):
+				quizzes.clear()
+				os.remove(filename)
+
+			print('\t(All quizzes deleted)\n')
 
 		else:
 			print('\t(No quizzes exist!)\n')
@@ -457,34 +549,51 @@ while True:
 	#Edit a quiz
 
 	elif inputCommand == edit_quiz:
-		while True:
-			quiz_name_input = input('\tEnter Quiz Name: ')
-			print()
 
-			if quiz_name_input == '':
-				print("\t\t(Must enter quiz's name!)\n")
+		if len(quizzes) > 0:
+			while True:
+				quiz_name_input = input('\tEnter Quiz Name: ')
+				print()
 
-			else:
-				quiz_found = False
-
-				for i in range(len(quizzes)):
-					if quizzes[i][0] == quiz_name_input:
-						quiz_found = True
-						current_quiz_index = i
-
-				if quiz_found == False:
-					print("\t\t(Quiz doesn't exist!)\n")
-					break
+				if quiz_name_input == '':
+					print("\t\t(Must enter quiz's name!)\n")
 
 				else:
-					create_or_edit_quiz = True
-					break
+					quiz_found = False
 
+					for i in range(len(quizzes)):
+						if quizzes[i][0] == quiz_name_input:
+							quiz_found = True
+							current_quiz_index = i
+							edit_quiz_mode = True
 
+					if quiz_found == False:
+						print("\t\t(Quiz doesn't exist!)\n")
+						break
 
+					else:
+						create_or_edit_quiz = True
+						break
 
+		else:
+			print('\t(No quizzes exist!)\n')
 
+	#View all the quizzes
 
+	elif inputCommand == view_quizzes:
+
+		if len(quizzes) > 0:
+			count = 0
+
+			for quiz in quizzes:
+				count += 1
+				print('\t' + str(count) + '. ' + quiz[0] + '\n')
+
+		else:
+			print('\t(No quizzes exist!)\n')
+
+	else:
+		print('\t(Invalid Input!)\n')
 
 
 
