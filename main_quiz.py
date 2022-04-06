@@ -12,14 +12,16 @@ print('\t-Add Question (type):           /mc (multiple choice) or /fr (free resp
 print('\t-Quit adding options for mc:    /que done')
 print('\t-Correct answer for mc:         (Use -> before the answer (ex: ->answer)')
 print('\t-Delete Question:               /del que (for current, last question, or enter a question number)')
-print('\t-Edit Question:                 /edit que')
 print('\t-Take Quiz:                     /take quiz')
 print('\t-View Quiz:                     /view quiz')
 print('\t-Edit Quiz:                     /edit quiz')
+print('\t-End taking the quiz:           /end quiz')
 print("\t-View All Quizzes' Names:       /view quizzes names")
 print('\t-Terminate Code:                /close')
 
 print('\n')
+
+#Commands
 
 create_quiz = '/create quiz'
 del_quiz = '/del quiz'
@@ -34,6 +36,7 @@ del_quest = '/del que'
 take_quiz = '/take quiz'
 view_quiz = '/view quiz'
 edit_quiz = '/edit quiz'
+end_quiz = '/end quiz'
 view_quizzes = '/view quizzes names'
 close = '/close'
 
@@ -140,14 +143,27 @@ while True:
 				print('\t\t\t(A quiz must have 1 or more questions!)\n')
 
 		elif inputCommand == del_quiz:
+
 			quiz_name = quizzes[current_quiz_index][0]
 			quizzes.pop(current_quiz_index)
 			create_or_edit_quiz = False
-			current_quiz_index = None
 
 			print("\t\t\t('" + quiz_name + "' deleted)\n")
+
+			if len(quizzes) > 0:
+
+				file = open(filename, 'w')
+
+				for quiz in quizzes:
+					quiz_data_in_file(quiz, file)
+
+				file.close()
+
+			elif os.path.exists(filename):
+				os.remove(filename)
 		
 		elif inputCommand == command_mc or inputCommand == command_fr:
+
 			while True:
 				question = input('\t\t\tQuestion ' + str(len(quizzes[current_quiz_index])) + " (can use '/del que'): ")
 				print()
@@ -244,6 +260,7 @@ while True:
 		elif inputCommand == del_quest:
 
 			if len(quizzes[current_quiz_index]) > 1:
+
 				which_question_input = input("\t\t\tQuestion # (or the command 'last'): ")
 				print()
 
@@ -268,6 +285,7 @@ while True:
 				print('\t\t\t(Quiz is empty!)\n')
 
 		elif inputCommand == view_quiz:
+			
 			if len(quizzes[current_quiz_index]) > 1:
 
 				print('\t\t\t----------------------------------\n')
@@ -404,17 +422,24 @@ while True:
 			quiz_exist = False
 
 			for quiz in quizzes:
+
 				if quiz[0] == quiz_name_input:
+
 					quizzes.remove(quiz)
 					print("\t\t('" + quiz_name_input + "' deleted)\n")
 					quiz_exist = True
 
-					file = open(filename, 'w')
+					if len(quizzes) > 0:
 
-					for quiz in quizzes:
-						quiz_data_in_file(quiz, file)
+						file = open(filename, 'w')
 
-					file.close()
+						for quiz in quizzes:
+							quiz_data_in_file(quiz, file)
+
+						file.close()
+
+					elif os.path.exists(filename):
+						os.remove(filename)
 
 					break
 
@@ -449,6 +474,7 @@ while True:
 			print()
 
 			quiz_exist = False
+			quit_quiz = False
 
 			for quiz in quizzes:
 				if quiz[0] == quiz_name_input:
@@ -477,12 +503,17 @@ while True:
 
 
 						while True:
-							answer_input = input('\t\t\tEnter Answer: ')
+							answer_input = input("\t\t\tEnter Answer (can use '/end quiz'): ")
 							print()
 
 							valid_answer = False
 
-							if answer_input != '':
+							if answer_input == end_quiz:
+								print('\t\t\t\t(Quiz ended)\n')
+								quit_quiz = True
+								break
+
+							elif answer_input != '':
 								if quiz[quest_num].question_type == mc:
 
 									try:
@@ -535,7 +566,7 @@ while True:
 								
 								break
 
-						if quiz_completed == True:
+						if quiz_completed == True or quit_quiz == True:
 							break
 
 					break
