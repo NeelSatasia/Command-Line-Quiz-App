@@ -454,9 +454,10 @@ while True:
 	elif inputCommand == del_all_quizzes:
 
 		if len(quizzes) > 0:
-
+			
+			quizzes.clear()
+			
 			if os.path.exists(filename):
-				quizzes.clear()
 				os.remove(filename)
 
 			print('\t(All quizzes deleted)\n')
