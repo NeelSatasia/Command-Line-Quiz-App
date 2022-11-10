@@ -1,5 +1,6 @@
 from question import Question
 import os
+import random
 
 print('\n\n--- This is a text-based Quiz App where you can create and take the quiz ---\n')
 
@@ -102,7 +103,7 @@ while True:
 		inputCommand = input('\t\tEnter Command (for ' + "'" + quizzes[current_quiz_index][0] + "'): ")
 	else:
 		inputCommand = input('Enter Command: ')
-	
+
 	print()
 
 	#Terminate code
@@ -161,7 +162,7 @@ while True:
 
 			elif os.path.exists(filename):
 				os.remove(filename)
-		
+
 		elif inputCommand == command_mc or inputCommand == command_fr:
 
 			while True:
@@ -231,7 +232,7 @@ while True:
 
 								else:
 									print('\t\t\t\t\t(Must write something!)\n')
-						
+
 						#Input: fr
 
 						elif inputCommand == command_fr:
@@ -285,7 +286,7 @@ while True:
 				print('\t\t\t(Quiz is empty!)\n')
 
 		elif inputCommand == view_quiz:
-			
+
 			if len(quizzes[current_quiz_index]) > 1:
 
 				print('\t\t\t----------------------------------\n')
@@ -313,7 +314,7 @@ while True:
 
 		else:
 			print("\t\t\t(Invalid input for creating a quiz!)\n")
-		
+
 
 	#Create a quiz
 
@@ -374,7 +375,7 @@ while True:
 
 					print('\n\t\t----------------------------------\n')
 
-					
+
 					for i in range(1, len(quiz)):
 						print('\t\t\tQuestion ' + str(i) + ': ' + quiz[i].question + '\n')
 
@@ -454,9 +455,9 @@ while True:
 	elif inputCommand == del_all_quizzes:
 
 		if len(quizzes) > 0:
-			
+
 			quizzes.clear()
-			
+
 			if os.path.exists(filename):
 				os.remove(filename)
 
@@ -481,17 +482,23 @@ while True:
 				if quiz[0] == quiz_name_input:
 					quiz_exist = True
 					quiz_completed = False
-					quest_num = 1
+					quest_num = 0
 					total_correct_answers = 0
 
-					while True:
-						print('\t\tQuestion ' + str(quest_num) + ': ' + quiz[quest_num].question + '\n')
+					shuffled_quiz = quiz[1:]
 
-						if quiz[quest_num].question_type == mc:
+					random.shuffle(shuffled_quiz)
+
+					while True:
+						print('\t\tQuestion ' + str(quest_num + 1) + ': ' + shuffled_quiz[quest_num].question + '\n')
+
+						if shuffled_quiz[quest_num].question_type == mc:
+
+							random.shuffle(shuffled_quiz[quest_num].options)
 
 							option_count = 1
 
-							for option in quiz[quest_num].options:
+							for option in shuffled_quiz[quest_num].options:
 								if option.find('->') == 0:
 									print('\t\t\tOption ' + str(option_count) + ': ' + option[2:] + '\n')
 
@@ -515,19 +522,19 @@ while True:
 								break
 
 							elif answer_input != '':
-								if quiz[quest_num].question_type == mc:
+								if shuffled_quiz[quest_num].question_type == mc:
 
 									try:
 										chosen_option_num = int(answer_input)
 
-										if chosen_option_num >= 1 and chosen_option_num <= len(quiz[quest_num].options):
+										if chosen_option_num >= 1 and chosen_option_num <= len(shuffled_quiz[quest_num].options):
 
 											valid_answer = True
 											got_answer_right = False
-											
-											for i in range(len(quiz[quest_num].options)):
 
-												if i + 1 == chosen_option_num and quiz[quest_num].options[i].find('->') == 0:
+											for i in range(len(shuffled_quiz[quest_num].options)):
+
+												if i + 1 == chosen_option_num and shuffled_quiz[quest_num].options[i].find('->') == 0:
 													print('\t\t\t\tCorrect :)\n')
 													got_answer_right = True
 													total_correct_answers += 1
@@ -544,7 +551,7 @@ while True:
 
 								else:
 
-									if answer_input == quiz[quest_num].options:
+									if answer_input == shuffled_quiz[quest_num].options:
 										print('\t\t\t\tCorrect :)\n')
 										total_correct_answers += 1
 
@@ -564,7 +571,7 @@ while True:
 								else:
 									print('\t\t(Results: ' + str(total_correct_answers) + ' out of ' + str(len(quiz) - 1) + ')\n')
 									quiz_completed = True
-								
+
 								break
 
 						if quiz_completed == True or quit_quiz == True:
@@ -627,8 +634,3 @@ while True:
 
 	else:
 		print('\t(Invalid Input!)\n')
-
-
-
-
-
