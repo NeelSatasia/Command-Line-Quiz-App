@@ -565,7 +565,7 @@ while True:
 
 							if valid_answer == True:
 
-								if quest_num + 1 <= len(quiz) - 1:
+								if quest_num + 1 < len(shuffled_quiz):
 									quest_num += 1
 
 								else:
