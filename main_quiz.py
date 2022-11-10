@@ -598,6 +598,7 @@ while True:
 							quiz_found = True
 							current_quiz_index = i
 							edit_quiz_mode = True
+							break
 
 					if quiz_found == False:
 						print("\t\t(Quiz doesn't exist!)\n")
